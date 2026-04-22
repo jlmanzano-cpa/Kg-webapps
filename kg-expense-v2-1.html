@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a2744">
+<title>KG Expense</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --navy: #1a2744;
+  --navy-light: #243460;
+  --navy-mid: #1e3a5f;
+  --blue: #2563eb;
+  --blue-light: #3b82f6;
+  --electric: #0ea5e9;
+  --surface: #f0f4f8;
+  --surface2: #e8eef4;
+  --surface3: #d1dce8;
+  --text: #0f172a;
+  --text2: #475569;
+  --text3: #94a3b8;
+  --white: #ffffff;
+  --danger: #ef4444;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 2px 16px rgba(26,39,68,0.08);
+  --shadow-md: 0 4px 24px rgba(26,39,68,0.12);
+  --shadow-lg: 0 8px 40px rgba(26,39,68,0.18);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  min-height: 100vh;
+  max-width: 430px;
+  margin: 0 auto;
+  overflow-x: hidden;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* ── HOME ── */
+#screen-home { background: var(--navy); }
+
+.home-hero {
+  padding: 60px 28px 36px;
+  background: linear-gradient(150deg, #1e3a6e 0%, var(--navy) 60%);
+  position: relative; overflow: hidden;
+}
+
+.home-hero::before {
+  content: '';
+  position: absolute; top: -60px; right: -40px;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14,165,233,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-eyebrow {
+  font-size: 11px; font-weight: 600;
+  color: var(--electric); letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.hero-eyebrow::before {
+  content: '';
+  display: inline-block; width: 20px; height: 2px;
+  background: var(--electric);
+}
+
+.home-hero h1 {
+  font-size: 32px; font-weight: 700;
+  color: var(--white); line-height: 1.15;
+  margin-bottom: 10px; letter-spacing: -0.5px;
+}
+
+.home-hero h1 span { color: var(--electric); }
+
+.home-hero p {
+  font-size: 14px; color: rgba(255,255,255,0.45);
+  font-weight: 300; line-height: 1.6;
+}
+
+.home-cards {
+  padding: 20px 18px;
+  display: flex; flex-direction: column; gap: 14px;
+  flex: 1;
+}
+
+.type-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; gap: 18px;
+}
+
+.type-card:active { transform: scale(0.97); background: rgba(255,255,255,0.08); }
+
+.type-card .card-icon {
+  width: 52px; height: 52px; flex-shrink: 0;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+}
+
+.type-card.liquidation .card-icon { background: rgba(14,165,233,0.15); }
+.type-card.reimbursement .card-icon { background: rgba(16,185,129,0.15); }
+
+.card-text { flex: 1; }
+.type-card h2 { font-size: 16px; font-weight: 600; color: var(--white); margin-bottom: 5px; }
+.type-card p { font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.5; font-weight: 300; }
+
+.card-chevron { color: rgba(255,255,255,0.2); font-size: 22px; flex-shrink: 0; }
+
+.home-footer {
+  padding: 20px 18px 32px;
+  font-size: 11px; color: rgba(255,255,255,0.18);
+  font-family: 'DM Mono', monospace;
+  text-align: center;
+}
+
+/* ── TOP BAR ── */
+.top-bar {
+  background: var(--white);
+  padding: 52px 18px 14px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--surface3);
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 1px 0 var(--surface3);
+}
+
+.btn-back {
+  width: 34px; height: 34px;
+  border-radius: 10px; background: var(--surface2);
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--text); flex-shrink: 0;
+}
+
+.top-bar-title { font-size: 16px; font-weight: 600; flex: 1; }
+
+.top-bar-badge {
+  font-size: 10px; font-weight: 600;
+  padding: 3px 9px; border-radius: 20px;
+  font-family: 'DM Mono', monospace; letter-spacing: 0.04em;
+}
+
+.badge-liquidation { background: rgba(14,165,233,0.12); color: var(--electric); }
+.badge-reimbursement { background: rgba(16,185,129,0.12); color: var(--success); }
+
+/* ── FORM SCREEN ── */
+#screen-form { background: var(--surface); }
+.form-body { flex: 1; overflow-y: auto; padding: 18px 18px 130px; }
+
+.section-label {
+  font-size: 10px; font-weight: 700;
+  color: var(--text3); letter-spacing: 0.10em;
+  text-transform: uppercase; margin-bottom: 10px; margin-top: 22px;
+}
+.section-label:first-child { margin-top: 0; }
+
+/* field groups */
+.field-group {
+  background: var(--white); border-radius: var(--radius);
+  overflow: hidden; box-shadow: var(--shadow);
+}
+
+.field-row {
+  display: flex; align-items: center;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--surface2); gap: 12px;
+}
+.field-row:last-child { border-bottom: none; }
+
+.field-row label { font-size: 13px; color: var(--text2); min-width: 96px; font-weight: 400; }
+.field-row input, .field-row select {
+  flex: 1; border: none; outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: var(--text);
+  background: transparent; text-align: right;
+}
+.field-row input::placeholder { color: var(--text3); }
+
+/* funds */
+.funds-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+
+.fund-item {
+  background: var(--white); border-radius: var(--radius-sm);
+  padding: 13px 15px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: var(--shadow);
+}
+.fund-info { flex: 1; }
+.fund-date { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+.fund-desc { font-size: 14px; color: var(--text); font-weight: 500; margin-top: 2px; }
+.fund-amount { font-size: 15px; font-weight: 600; color: var(--navy); font-family: 'DM Mono', monospace; }
+
+.btn-delete-small {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: rgba(239,68,68,0.08); border: none; cursor: pointer;
+  color: var(--danger); font-size: 13px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.btn-add-fund {
+  background: var(--white);
+  border: 1.5px dashed var(--surface3);
+  border-radius: var(--radius-sm);
+  padding: 13px; width: 100%;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: var(--text3);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: background 0.15s;
+}
+.btn-add-fund:active { background: var(--surface2); }
+
+/* upload */
+.upload-zone {
+  background: var(--white); border-radius: var(--radius);
+  padding: 28px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  box-shadow: var(--shadow);
+  border: 1.5px dashed var(--surface3);
+}
+
+.upload-icon {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, rgba(14,165,233,0.10), rgba(37,99,235,0.10));
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center; font-size: 26px;
+}
+
+.upload-zone h3 { font-size: 15px; font-weight: 600; }
+.upload-zone p { font-size: 13px; color: var(--text3); text-align: center; line-height: 1.5; }
+
+.upload-buttons { display: flex; gap: 10px; width: 100%; }
+
+.btn-capture, .btn-upload-file {
+  flex: 1; padding: 13px;
+  border-radius: var(--radius-sm);
+  border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  position: relative; overflow: hidden; transition: opacity 0.15s;
+}
+.btn-capture { background: var(--navy); color: var(--white); }
+.btn-upload-file { background: var(--surface2); color: var(--text); }
+.btn-capture:active, .btn-upload-file:active { opacity: 0.8; }
+.btn-capture input, .btn-upload-file input {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+
+/* extracted card */
+.extracted-card {
+  display: none; background: var(--white);
+  border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-md);
+}
+.extracted-card.active { display: block; }
+
+.extracted-header {
+  background: linear-gradient(135deg, var(--navy), var(--navy-mid));
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+
+.preview-thumb {
+  width: 42px; height: 42px; border-radius: 9px;
+  background: rgba(255,255,255,0.1);
+  overflow: hidden; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.extracted-header h3 { font-size: 14px; font-weight: 600; color: var(--white); }
+.extracted-header p { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+
+.extracted-badge {
+  margin-left: auto;
+  background: rgba(16,185,129,0.25); color: #6ee7b7;
+  font-size: 10px; font-weight: 600;
+  padding: 3px 8px; border-radius: 6px;
+  font-family: 'DM Mono', monospace; letter-spacing: 0.04em;
+}
+
+.ext-field {
+  display: flex; align-items: center;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--surface2); gap: 12px;
+}
+.ext-field:last-child { border-bottom: none; }
+.ext-field label { font-size: 12px; color: var(--text3); min-width: 90px; font-weight: 400; }
+.ext-field input, .ext-field select {
+  flex: 1; border: none; outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: var(--text);
+  background: transparent; text-align: right;
+}
+.ext-field input:focus { color: var(--blue); }
+
+.extracted-actions { display: flex; border-top: 1px solid var(--surface2); }
+
+.btn-discard, .btn-add-item {
+  flex: 1; padding: 16px; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+  transition: opacity 0.15s;
+}
+.btn-discard { background: var(--white); color: var(--danger); border-right: 1px solid var(--surface2); }
+.btn-add-item { background: var(--navy); color: var(--white); }
+.btn-discard:active, .btn-add-item:active { opacity: 0.8; }
+
+/* expense list */
+.expense-list { display: flex; flex-direction: column; gap: 8px; }
+
+.expense-item {
+  background: var(--white); border-radius: var(--radius-sm);
+  padding: 13px 15px;
+  display: flex; align-items: flex-start; gap: 12px;
+  box-shadow: var(--shadow);
+  animation: slideIn 0.22s ease;
+}
+@keyframes slideIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.expense-thumb {
+  width: 38px; height: 38px; border-radius: 9px;
+  background: var(--surface2); flex-shrink: 0;
+  overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 17px;
+}
+.expense-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.expense-info { flex: 1; min-width: 0; }
+.expense-date { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+.expense-desc { font-size: 14px; color: var(--text); font-weight: 500; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.cat-badge {
+  display: inline-block; padding: 2px 7px; border-radius: 4px;
+  font-size: 10px; font-weight: 600; margin-top: 4px; letter-spacing: 0.03em;
+}
+.cat-Fare { background:rgba(245,158,11,0.1); color:var(--warning); }
+.cat-Notary { background:rgba(99,102,241,0.1); color:#818cf8; }
+.cat-Government { background:rgba(14,165,233,0.1); color:var(--electric); }
+.cat-Meals { background:rgba(239,68,68,0.1); color:var(--danger); }
+.cat-Supplies { background:rgba(16,185,129,0.1); color:var(--success); }
+.cat-Software { background:rgba(139,92,246,0.1); color:#a78bfa; }
+.cat-Other { background:rgba(148,163,184,0.1); color:var(--text3); }
+
+.expense-right { display:flex; flex-direction:column; align-items:flex-end; gap:8px; flex-shrink:0; }
+.expense-amount { font-size:15px; font-weight:600; color:var(--navy); font-family:'DM Mono',monospace; }
+
+/* totals */
+.totals-bar {
+  background: var(--white); border-radius: var(--radius);
+  padding: 14px 18px; box-shadow: var(--shadow); margin-top: 8px;
+}
+.total-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; border-bottom: 1px solid var(--surface2);
+}
+.total-row:last-child { border-bottom:none; padding-top:10px; }
+.total-row label { font-size:13px; color:var(--text2); }
+.total-row .amt { font-size:14px; font-weight:600; font-family:'DM Mono',monospace; color:var(--text); }
+.total-row.balance label { font-size:14px; font-weight:700; color:var(--text); }
+.total-row.balance .amt { font-size:16px; color:var(--navy); }
+.total-row.balance .amt.neg { color:var(--danger); }
+
+/* bottom action */
+.bottom-action {
+  position: fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:430px;
+  padding: 14px 18px 34px;
+  background: linear-gradient(to top, var(--surface) 65%, transparent);
+}
+
+.btn-generate {
+  width:100%; padding:17px;
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+  color:var(--white); border:none; border-radius:var(--radius);
+  font-family:'DM Sans',sans-serif; font-size:16px; font-weight:600;
+  cursor:pointer; box-shadow:0 8px 24px rgba(26,39,68,0.28);
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.btn-generate:active { transform:scale(0.98); }
+.btn-generate:disabled { opacity:0.35; cursor:not-allowed; }
+
+/* modal */
+.modal-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.55); z-index:200;
+  align-items:flex-end; backdrop-filter:blur(4px);
+}
+.modal-overlay.active { display:flex; }
+
+.modal-sheet {
+  background:var(--white); border-radius:24px 24px 0 0;
+  padding:22px 18px 40px; width:100%;
+  animation:slideUp 0.28s ease;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+.modal-handle { width:38px; height:4px; background:var(--surface3); border-radius:2px; margin:0 auto 18px; }
+.modal-title { font-size:17px; font-weight:600; margin-bottom:18px; }
+
+.modal-field { margin-bottom:14px; }
+.modal-field label {
+  font-size:11px; color:var(--text3); font-weight:600;
+  display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.07em;
+}
+.modal-field input, .modal-field select {
+  width:100%; padding:13px 15px;
+  border:1.5px solid var(--surface3); border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif; font-size:15px; color:var(--text);
+  background:var(--white); outline:none; transition:border-color 0.2s;
+}
+.modal-field input:focus, .modal-field select:focus { border-color:var(--blue); }
+
+.modal-actions { display:flex; gap:10px; margin-top:18px; }
+.btn-modal-cancel {
+  flex:1; padding:15px; background:var(--surface2); border:none;
+  border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif;
+  font-size:15px; font-weight:500; color:var(--text); cursor:pointer;
+}
+.btn-modal-confirm {
+  flex:2; padding:15px; background:var(--navy); border:none;
+  border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif;
+  font-size:15px; font-weight:600; color:var(--white); cursor:pointer;
+}
+
+/* preview screen */
+#screen-preview { background:var(--surface); }
+.preview-body { flex:1; overflow-y:auto; padding:18px 18px 130px; }
+
+/* PDF preview card */
+.pdf-preview {
+  background:var(--white); border-radius:var(--radius);
+  overflow:hidden; box-shadow:var(--shadow-lg);
+}
+
+.pdf-kgheader {
+  background:linear-gradient(135deg, var(--navy), var(--navy-light));
+  padding:24px 22px 20px;
+  display:flex; align-items:center; gap:16px;
+}
+.pdf-logo-box {
+  width:50px; height:50px; background:var(--white); border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; font-weight:800; color:var(--navy);
+  font-family:'DM Mono',monospace; flex-shrink:0;
+  letter-spacing:-1px;
+}
+.pdf-firm-name h2 { font-size:15px; font-weight:700; color:var(--white); letter-spacing:-0.2px; }
+.pdf-firm-name p { font-size:11px; color:rgba(255,255,255,0.4); margin-top:3px; }
+
+.pdf-doc-type {
+  background:var(--electric);
+  padding:9px 22px;
+  font-size:11px; font-weight:700; color:var(--white);
+  letter-spacing:0.14em; text-transform:uppercase;
+  font-family:'DM Mono',monospace;
+}
+
+.pdf-meta { padding:16px 22px; border-bottom:1px solid var(--surface2); }
+.pdf-meta-row { display:flex; gap:8px; margin-bottom:4px; font-size:13px; }
+.meta-label { color:var(--text3); min-width:88px; }
+.meta-val { color:var(--text); font-weight:500; }
+
+.pdf-section-head {
+  background:var(--surface2); padding:9px 22px;
+  font-size:10px; font-weight:700; color:var(--text2);
+  letter-spacing:0.09em; text-transform:uppercase;
+}
+
+.pdf-table { width:100%; border-collapse:collapse; }
+.pdf-table th {
+  padding:9px 22px; font-size:11px; font-weight:600; color:var(--text3);
+  text-align:left; border-bottom:1px solid var(--surface2);
+}
+.pdf-table th:last-child { text-align:right; }
+.pdf-table td {
+  padding:9px 22px; font-size:13px; color:var(--text);
+  border-bottom:1px solid var(--surface2);
+}
+.pdf-table td:first-child { color:var(--text3); font-family:'DM Mono',monospace; font-size:11px; width:72px; }
+.pdf-table td:last-child { text-align:right; font-family:'DM Mono',monospace; font-weight:500; }
+
+.pdf-subtotal {
+  display:flex; justify-content:space-between;
+  padding:11px 22px; background:var(--surface2);
+  font-size:13px; font-weight:700;
+  border-bottom:1px solid var(--surface3);
+}
+.pdf-subtotal .samt { font-family:'DM Mono',monospace; }
+
+.pdf-balance-bar {
+  padding:16px 22px;
+  display:flex; justify-content:space-between; align-items:center;
+  background:var(--navy);
+}
+.pdf-balance-bar .blabel { font-size:12px; font-weight:600; color:rgba(255,255,255,0.65); }
+.pdf-balance-bar .bamt { font-size:18px; font-weight:700; color:var(--white); font-family:'DM Mono',monospace; }
+.pdf-balance-bar .bamt.neg { color:#fca5a5; }
+
+.pdf-sigs {
+  padding:22px 22px 18px;
+  display:flex; justify-content:space-between; gap:10px;
+  border-top:1px solid var(--surface2);
+}
+.sig-block { flex:1; text-align:center; }
+.sig-line { border-top:1px solid var(--surface3); margin:20px 0 6px; }
+.sig-name { font-size:11px; font-weight:700; color:var(--text); }
+.sig-title { font-size:10px; color:var(--text3); margin-top:2px; line-height:1.4; }
+
+.pdf-att-head {
+  padding:10px 22px; background:var(--surface2);
+  font-size:10px; font-weight:700; color:var(--text2);
+  letter-spacing:0.09em; text-transform:uppercase;
+  border-top:1px solid var(--surface3);
+}
+.pdf-att-grid {
+  padding:14px 22px;
+  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+}
+.att-card { border-radius:var(--radius-sm); overflow:hidden; border:1px solid var(--surface3); }
+.att-card img { width:100%; aspect-ratio:3/4; object-fit:cover; display:block; background:var(--surface2); }
+.att-label { padding:7px 10px; background:var(--surface2); font-size:10px; color:var(--text3); line-height:1.4; }
+
+/* count chip */
+.count-chip {
+  background:var(--electric); color:var(--white);
+  font-size:10px; font-weight:700; padding:2px 7px;
+  border-radius:10px; font-family:'DM Mono',monospace; margin-left:6px;
+}
+
+/* toast */
+.toast {
+  position:fixed; bottom:110px; left:50%; transform:translateX(-50%);
+  background:var(--text); color:var(--white);
+  padding:11px 20px; border-radius:12px;
+  font-size:14px; font-weight:500; z-index:400;
+  white-space:nowrap; opacity:0; pointer-events:none;
+  transition:opacity 0.2s; max-width:320px; text-align:center;
+}
+.toast.show { opacity:1; }
+
+/* generating overlay */
+.gen-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(26,39,68,0.85); z-index:500;
+  flex-direction:column; align-items:center; justify-content:center; gap:18px;
+  backdrop-filter:blur(6px);
+}
+.gen-overlay.active { display:flex; }
+.gen-spinner {
+  width:52px; height:52px;
+  border:3px solid rgba(255,255,255,0.15);
+  border-top-color:var(--electric);
+  border-radius:50%; animation:spin 0.8s linear infinite;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+.gen-overlay p { font-size:15px; font-weight:500; color:var(--white); }
+.gen-overlay small { font-size:12px; color:rgba(255,255,255,0.45); }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<div class="gen-overlay" id="gen-overlay">
+  <div class="gen-spinner"></div>
+  <p>Building your PDF...</p>
+  <small>Embedding receipts and formatting report</small>
+</div>
+
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="home-hero">
+    <div class="hero-eyebrow">KG Consult Group</div>
+    <h1>Expense<br><span>Reports.</span></h1>
+    <p>Capture receipts, compile expenses,<br>generate reports instantly.</p>
+  </div>
+  <div class="home-cards">
+    <div class="type-card liquidation" onclick="startReport('liquidation')">
+      <div class="card-icon">🏢</div>
+      <div class="card-text">
+        <h2>Client Liquidation</h2>
+        <p>Document expenses against client prepaid fund. Includes funds received and balance.</p>
+      </div>
+      <div class="card-chevron">›</div>
+    </div>
+    <div class="type-card reimbursement" onclick="startReport('reimbursement')">
+      <div class="card-icon">💳</div>
+      <div class="card-text">
+        <h2>Reimbursement Request</h2>
+        <p>Submit personal advances for meals, transpo, subscriptions, and office supplies.</p>
+      </div>
+      <div class="card-chevron">›</div>
+    </div>
+  </div>
+  <div class="home-footer">KGC EXPENSE · v2.0 · PDF READY</div>
+</div>
+
+<!-- FORM -->
+<div class="screen" id="screen-form">
+  <div class="top-bar">
+    <button class="btn-back" onclick="goHome()">←</button>
+    <div class="top-bar-title" id="form-title">New Report</div>
+    <div class="top-bar-badge" id="form-badge"></div>
+  </div>
+  <div class="form-body" id="form-body"></div>
+  <div class="bottom-action">
+    <button class="btn-generate" id="btn-generate" onclick="generatePDF()" disabled>
+      📄 Generate &amp; Download PDF
+    </button>
+  </div>
+</div>
+
+<!-- PREVIEW -->
+<div class="screen" id="screen-preview">
+  <div class="top-bar">
+    <button class="btn-back" onclick="goToForm()">←</button>
+    <div class="top-bar-title">Report Preview</div>
+    <div class="top-bar-badge badge-liquidation" id="preview-badge">READY</div>
+  </div>
+  <div class="preview-body" id="preview-body"></div>
+  <div class="bottom-action">
+    <button class="btn-generate" id="btn-download" onclick="downloadLastPDF()">
+      📥 Download PDF Again
+    </button>
+  </div>
+</div>
+
+<!-- MODAL: FUND -->
+<div class="modal-overlay" id="modal-fund">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Fund Received</div>
+    <div class="modal-field"><label>Date</label><input type="date" id="fund-date"></div>
+    <div class="modal-field"><label>Description</label><input type="text" id="fund-desc" placeholder="e.g. Initial prepaid fund"></div>
+    <div class="modal-field"><label>Amount (₱)</label><input type="number" id="fund-amount" placeholder="0.00" inputmode="decimal"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeModal('modal-fund')">Cancel</button>
+      <button class="btn-modal-confirm" onclick="confirmFund()">Add Fund</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// jsPDF loaded from CDN - destructured at point of use to avoid race condition
+
+// ── STATE ──
+let S = {
+  type: null, clientName: '', engagement: '', preparedBy: '',
+  funds: [], expenses: []
+};
+let lastPdfBlob = null;
+let lastPdfFilename = '';
+
+const CATS = ['Fare','Notary','Government','Meals','Supplies','Software','Other'];
+
+// ── NAV ──
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function goHome() {
+  if ((S.expenses.length || S.funds.length) && !confirm('Go back? Entries will be lost.')) return;
+  S = { type:null, clientName:'', engagement:'', preparedBy:'', funds:[], expenses:[] };
+  show('screen-home');
+}
+function goToForm() { show('screen-form'); }
+
+// ── START ──
+function startReport(type) {
+  S.type = type; S.funds = []; S.expenses = [];
+  const title = document.getElementById('form-title');
+  const badge = document.getElementById('form-badge');
+  if (type === 'liquidation') {
+    title.textContent = 'Liquidation Report';
+    badge.textContent = 'CLIENT'; badge.className = 'top-bar-badge badge-liquidation';
+  } else {
+    title.textContent = 'Reimbursement Request';
+    badge.textContent = 'INTERNAL'; badge.className = 'top-bar-badge badge-reimbursement';
+  }
+  renderForm();
+  show('screen-form');
+}
+
+// ── RENDER FORM ──
+function renderForm() {
+  const isL = S.type === 'liquidation';
+  let h = '';
+
+  h += `<div class="section-label">Report Details</div>
+  <div class="field-group">`;
+  if (isL) {
+    h += `<div class="field-row"><label>Client</label><input type="text" id="inp-client" placeholder="Client name" oninput="S.clientName=this.value;chk()"></div>`;
+  }
+  h += `<div class="field-row"><label>${isL?'Engagement':'Purpose'}</label><input type="text" id="inp-eng" placeholder="${isL?'e.g. Business Permit 2026':'e.g. Client meeting expenses'}" oninput="S.engagement=this.value;chk()"></div>
+  <div class="field-row"><label>Prepared by</label><input type="text" id="inp-prep" placeholder="Your name" oninput="S.preparedBy=this.value;chk()"></div>
+  </div>`;
+
+  if (isL) {
+    h += `<div class="section-label">Funds Received from Client</div>
+    <div class="funds-list" id="funds-list"></div>
+    <button class="btn-add-fund" onclick="openModal('modal-fund')">＋ Add Fund Received</button>`;
+  }
+
+  h += `<div class="section-label" style="margin-top:26px">Add Receipt</div>
+  <div id="upload-area">
+    <div class="upload-zone" id="upload-zone">
+      <div class="upload-icon">📸</div>
+      <h3>Add Receipt Photo</h3>
+      <p>Take a photo or pick from your gallery. Image receipts only.</p>
+      <div class="upload-buttons" onclick="event.stopPropagation()">
+        <button class="btn-capture">📷 Camera<input type="file" accept="image/*" capture="environment" onchange="handleImg(this)"></button>
+        <button class="btn-upload-file">🖼️ Gallery<input type="file" accept="image/*" onchange="handleImg(this)"></button>
+      </div>
+    </div>
+    <div class="extracted-card" id="extracted-card"></div>
+  </div>
+  <div class="section-label" id="exp-lbl" style="display:none">Expense Items <span class="count-chip" id="exp-count">0</span></div>
+  <div class="expense-list" id="expense-list"></div>
+  <div id="totals-wrap"></div>`;
+
+  document.getElementById('form-body').innerHTML = h;
+  renderFunds();
+}
+
+// ── FILE HANDLING ──
+function handleImg(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Image files only (JPG, PNG, HEIC)'); return; }
+
+  const MAX = 4 * 1024 * 1024;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const src = e.target.result;
+    // If large image, compress it
+    if (file.size > MAX) {
+      compressImage(src, 1200, 0.75, compressed => showExtracted(compressed, file.name));
+    } else {
+      showExtracted(src, file.name);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function compressImage(src, maxW, quality, cb) {
+  const img = new Image();
+  img.onload = () => {
+    const ratio = Math.min(1, maxW / img.width);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width * ratio;
+    canvas.height = img.height * ratio;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    cb(canvas.toDataURL('image/jpeg', quality));
+  };
+  img.src = src;
+}
+
+function showExtracted(src, fname) {
+  document.getElementById('upload-zone').style.display = 'none';
+  const catOpts = CATS.map(c => `<option value="${c}">${c}</option>`).join('');
+  const today = new Date().toISOString().split('T')[0];
+
+  document.getElementById('extracted-card').innerHTML = `
+  <div class="extracted-header">
+    <div class="preview-thumb"><img src="${src}" alt="receipt"></div>
+    <div><h3>Receipt Added</h3><p>${fname}</p></div>
+    <div class="extracted-badge">READY</div>
+  </div>
+  <div>
+    <div class="ext-field"><label>Date</label><input type="date" id="ext-date" value="${today}"></div>
+    <div class="ext-field"><label>Description</label><input type="text" id="ext-desc" placeholder="What was this for?"></div>
+    <div class="ext-field"><label>Amount (₱)</label><input type="number" id="ext-amt" placeholder="0.00" inputmode="decimal"></div>
+    <div class="ext-field"><label>Category</label><select id="ext-cat">${catOpts}</select></div>
+  </div>
+  <div class="extracted-actions">
+    <button class="btn-discard" onclick="discardImg()">✕ Discard</button>
+    <button class="btn-add-item" onclick="confirmItem('${src.replace(/'/g,"\\'")}')">✓ Add to Report</button>
+  </div>`;
+
+  document.getElementById('extracted-card').classList.add('active');
+}
+
+function discardImg() {
+  document.getElementById('extracted-card').classList.remove('active');
+  document.getElementById('extracted-card').innerHTML = '';
+  document.getElementById('upload-zone').style.display = '';
+}
+
+function confirmItem(src) {
+  const date = document.getElementById('ext-date').value;
+  const desc = document.getElementById('ext-desc').value.trim();
+  const amt  = parseFloat(document.getElementById('ext-amt').value);
+  const cat  = document.getElementById('ext-cat').value;
+  if (!date || !desc || isNaN(amt) || amt <= 0) { showToast('Please fill all fields'); return; }
+  S.expenses.push({ date, desc, amount: amt, category: cat, preview: src });
+  discardImg();
+  renderExpenses();
+  chk();
+  showToast('✓ Receipt added to report');
+}
+
+// ── RENDER EXPENSES ──
+function renderExpenses() {
+  const list = document.getElementById('expense-list');
+  const lbl  = document.getElementById('exp-lbl');
+  const cnt  = document.getElementById('exp-count');
+  const wrap = document.getElementById('totals-wrap');
+  if (!list) return;
+
+  if (!S.expenses.length) { list.innerHTML=''; lbl.style.display='none'; wrap.innerHTML=''; return; }
+  lbl.style.display='block'; cnt.textContent=S.expenses.length;
+
+  list.innerHTML = S.expenses.map((e,i) => `
+  <div class="expense-item">
+    <div class="expense-thumb"><img src="${e.preview}" alt="receipt"></div>
+    <div class="expense-info">
+      <div class="expense-date">${fmtDate(e.date)}</div>
+      <div class="expense-desc">${e.desc}</div>
+      <div><span class="cat-badge cat-${e.category}">${e.category}</span></div>
+    </div>
+    <div class="expense-right">
+      <div class="expense-amount">₱${fmt(e.amount)}</div>
+      <button class="btn-delete-small" onclick="delExp(${i})">✕</button>
+    </div>
+  </div>`).join('');
+
+  renderTotals(wrap);
+}
+
+function delExp(i) { S.expenses.splice(i,1); renderExpenses(); chk(); }
+
+function renderTotals(wrap) {
+  const isL = S.type === 'liquidation';
+  const totE = S.expenses.reduce((s,e)=>s+e.amount,0);
+  const totF = S.funds.reduce((s,f)=>s+f.amount,0);
+  const bal  = totF - totE;
+  let h = `<div class="totals-bar">`;
+  if (isL) h += `<div class="total-row"><label>Total Funds Received</label><div class="amt">₱${fmt(totF)}</div></div>`;
+  h += `<div class="total-row"><label>Total Expenses</label><div class="amt">₱${fmt(totE)}</div></div>`;
+  if (isL) {
+    const lbl = bal >= 0 ? 'Fund for Return' : 'Amount for Collection';
+    h += `<div class="total-row balance"><label>${lbl}</label><div class="amt ${bal<0?'neg':''}">₱${fmt(Math.abs(bal))}</div></div>`;
+  } else {
+    h += `<div class="total-row balance"><label>Total to Reimburse</label><div class="amt">₱${fmt(totE)}</div></div>`;
+  }
+  h += `</div>`;
+  wrap.innerHTML = h;
+}
+
+// ── FUNDS ──
+function renderFunds() {
+  const el = document.getElementById('funds-list');
+  if (!el) return;
+  el.innerHTML = S.funds.map((f,i) => `
+  <div class="fund-item">
+    <div class="fund-info">
+      <div class="fund-date">${fmtDate(f.date)}</div>
+      <div class="fund-desc">${f.desc}</div>
+    </div>
+    <div class="fund-amount">₱${fmt(f.amount)}</div>
+    <button class="btn-delete-small" onclick="delFund(${i})">✕</button>
+  </div>`).join('');
+}
+
+function delFund(i) { S.funds.splice(i,1); renderFunds(); if(S.expenses.length) renderExpenses(); chk(); }
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function confirmFund() {
+  const date = document.getElementById('fund-date').value;
+  const desc = document.getElementById('fund-desc').value.trim();
+  const amt  = parseFloat(document.getElementById('fund-amount').value);
+  if (!date||!desc||isNaN(amt)||amt<=0) { showToast('Please fill all fields'); return; }
+  S.funds.push({date,desc,amount:amt});
+  closeModal('modal-fund');
+  document.getElementById('fund-date').value='';
+  document.getElementById('fund-desc').value='';
+  document.getElementById('fund-amount').value='';
+  renderFunds();
+  if(S.expenses.length) renderExpenses();
+  chk();
+}
+
+function chk() {
+  const btn = document.getElementById('btn-generate');
+  const ok = S.expenses.length > 0 && S.engagement.trim() &&
+    (S.type==='reimbursement' || (S.funds.length>0 && S.clientName.trim()));
+  btn.disabled = !ok;
+}
+
+// ── PDF GENERATION ──
+async function generatePDF() {
+  document.getElementById('gen-overlay').classList.add('active');
+  await new Promise(r => setTimeout(r, 80)); // let UI update
+
+  try {
+    if (!window.jspdf) { showToast('PDF library not loaded. Check your connection.'); document.getElementById('gen-overlay').classList.remove('active'); return; }
+    const pdf = await buildPDF();
+    const isL = S.type === 'liquidation';
+    const slug = (isL ? S.clientName : S.preparedBy || 'KGC')
+      .replace(/[^a-zA-Z0-9]/g,'_').substring(0,20);
+    const dateStr = new Date().toISOString().split('T')[0];
+    lastPdfFilename = `KGC_${isL?'Liquidation':'Reimbursement'}_${slug}_${dateStr}.pdf`;
+
+    const blob = pdf.output('blob');
+    lastPdfBlob = blob;
+    triggerDownload(blob, lastPdfFilename);
+
+    // Show preview
+    buildScreenPreview();
+    document.getElementById('gen-overlay').classList.remove('active');
+    show('screen-preview');
+    showToast('✓ PDF downloaded');
+  } catch(err) {
+    document.getElementById('gen-overlay').classList.remove('active');
+    console.error(err);
+    showToast('Error generating PDF. Try again.');
+  }
+}
+
+function downloadLastPDF() {
+  if (!lastPdfBlob) return;
+  triggerDownload(lastPdfBlob, lastPdfFilename);
+  showToast('📥 Downloading again...');
+}
+
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+// ── BUILD PDF ──
+async function buildPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const isL = S.type === 'liquidation';
+  const PW = 210; const PH = 297;
+  const ML = 25.4; const MR = 25.4; const MT = 25.4;
+  const CW = PW - ML - MR; // 159.2mm usable
+  let y = MT;
+
+  // ── HEADER BLOCK ──
+  // Navy bar across full width
+  doc.setFillColor(26,39,68);
+  doc.rect(0, 0, PW, 28, 'F');
+
+  // KG logo box
+  doc.setFillColor(255,255,255);
+  doc.roundedRect(ML, 6, 16, 16, 2, 2, 'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(9); doc.setTextColor(26,39,68);
+  doc.text('KG', ML+8, 16.5, {align:'center'});
+
+  // Firm name
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(12); doc.setTextColor(255,255,255);
+  doc.text('KG Consult Group Inc.', ML+20, 13);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(8); doc.setTextColor(160,180,210);
+  doc.text('Makati City, Philippines', ML+20, 19);
+
+  y = 28;
+
+  // Electric blue doc-type strip
+  doc.setFillColor(14,165,233);
+  doc.rect(0, y, PW, 9, 'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(8); doc.setTextColor(255,255,255);
+  const docLabel = isL ? 'LIQUIDATION REPORT' : 'REIMBURSEMENT REQUEST';
+  doc.text(docLabel, ML, y+6);
+  y += 9;
+
+  // ── META ──
+  y += 6;
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9); doc.setTextColor(100,116,139);
+
+  const metaRows = [];
+  if (isL) metaRows.push(['Client', S.clientName]);
+  metaRows.push([isL ? 'Engagement' : 'Purpose', S.engagement]);
+  metaRows.push(['Prepared by', S.preparedBy || 'N/A']);
+  metaRows.push(['Date', new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'})]);
+
+  metaRows.forEach(([lbl, val]) => {
+    doc.setTextColor(148,163,184); doc.text(lbl, ML, y);
+    doc.setTextColor(15,23,42); doc.setFont('helvetica','bold');
+    doc.text(val, ML+30, y);
+    doc.setFont('helvetica','normal');
+    y += 6;
+  });
+
+  y += 2;
+  doc.setDrawColor(226,232,240);
+  doc.line(ML, y, PW-MR, y);
+  y += 6;
+
+  // ── FUNDS RECEIVED (liquidation) ──
+  if (isL && S.funds.length) {
+    // Section header
+    doc.setFillColor(241,245,249);
+    doc.rect(ML, y, CW, 7, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8);
+    doc.setTextColor(71,85,105);
+    doc.text('ACTUAL FUNDS RECEIVED FROM CLIENT', ML+2, y+5);
+    y += 7;
+
+    // Table header
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(148,163,184);
+    doc.text('DATE', ML, y+5);
+    doc.text('DESCRIPTION', ML+22, y+5);
+    doc.text('AMOUNT', PW-MR, y+5, {align:'right'});
+    y += 5;
+    doc.setDrawColor(226,232,240); doc.line(ML, y, PW-MR, y);
+    y += 2;
+
+    // Rows
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+    S.funds.forEach(f => {
+      doc.setTextColor(148,163,184); doc.text(fmtDate(f.date), ML, y+4.5);
+      doc.setTextColor(15,23,42); doc.text(f.desc, ML+22, y+4.5, {maxWidth: CW-55});
+      doc.text('₱'+fmt(f.amount), PW-MR, y+4.5, {align:'right'});
+      doc.setDrawColor(241,245,249); doc.line(ML, y+7, PW-MR, y+7);
+      y += 7;
+    });
+
+    // Subtotal
+    const totF = S.funds.reduce((s,f)=>s+f.amount,0);
+    doc.setFillColor(241,245,249);
+    doc.rect(ML, y, CW, 8, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+    doc.text('TOTAL FUNDS RECEIVED', ML+2, y+5.5);
+    doc.text('₱'+fmt(totF), PW-MR, y+5.5, {align:'right'});
+    y += 8; y += 5;
+  }
+
+  // ── EXPENSES ──
+  doc.setFillColor(241,245,249);
+  doc.rect(ML, y, CW, 7, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(71,85,105);
+  doc.text('VARIOUS EXPENSES', ML+2, y+5);
+  y += 7;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(148,163,184);
+  doc.text('DATE', ML, y+5);
+  doc.text('DESCRIPTION', ML+22, y+5);
+  doc.text('AMOUNT', PW-MR, y+5, {align:'right'});
+  y += 5;
+  doc.setDrawColor(226,232,240); doc.line(ML, y, PW-MR, y);
+  y += 2;
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+  S.expenses.forEach(e => {
+    // Page break check
+    if (y > PH - 60) { doc.addPage(); y = MT; }
+    doc.setTextColor(148,163,184); doc.text(fmtDate(e.date), ML, y+4.5);
+    doc.setTextColor(15,23,42); doc.text(e.desc, ML+22, y+4.5, {maxWidth: CW-55});
+    doc.text('₱'+fmt(e.amount), PW-MR, y+4.5, {align:'right'});
+    doc.setDrawColor(241,245,249); doc.line(ML, y+7, PW-MR, y+7);
+    y += 7;
+  });
+
+  const totE = S.expenses.reduce((s,e)=>s+e.amount,0);
+  doc.setFillColor(241,245,249);
+  doc.rect(ML, y, CW, 8, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+  doc.text('TOTAL EXPENSES', ML+2, y+5.5);
+  doc.text('₱'+fmt(totE), PW-MR, y+5.5, {align:'right'});
+  y += 8; y += 4;
+
+  // ── BALANCE BAR ──
+  if (y > PH - 40) { doc.addPage(); y = MT; }
+  const totF2 = S.funds.reduce((s,f)=>s+f.amount,0);
+  const bal   = totF2 - totE;
+  const isNeg = bal < 0;
+  const balLabel = isL
+    ? (isNeg ? 'TOTAL AMOUNT FOR COLLECTION' : 'TOTAL FUND FOR RETURN')
+    : 'TOTAL AMOUNT FOR REIMBURSEMENT';
+  const balAmt = isL ? Math.abs(bal) : totE;
+
+  doc.setFillColor(26,39,68);
+  doc.rect(ML, y, CW, 12, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.setTextColor(160,190,220);
+  doc.text(balLabel, ML+3, y+7.5);
+  doc.setFontSize(12);
+  doc.setTextColor(isNeg ? 252,165,165 : 255,255,255);
+  doc.text('₱'+fmt(balAmt), PW-MR-1, y+7.5, {align:'right'});
+  y += 12; y += 8;
+
+  // ── SIGNATURES ──
+  if (y > PH - 50) { doc.addPage(); y = MT; }
+  const sigW = CW / 3;
+  const sigs = [
+    { name: S.preparedBy || '_______________', role: 'Prepared By', title: '' },
+    { name: 'DONNA R. GRACE', role: 'Reviewed By', title: 'Admin & Finance Manager' },
+    { name: 'KEVIN A. GRACE, CPA', role: 'Approved By', title: 'President & Chief Consultant' },
+  ];
+
+  sigs.forEach((sig, i) => {
+    const x = ML + i * sigW;
+    const cx = x + sigW/2;
+    doc.setDrawColor(203,213,225);
+    doc.line(x+2, y+14, x+sigW-4, y+14);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(15,23,42);
+    doc.text(sig.name, cx, y+20, {align:'center', maxWidth: sigW-4});
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,116,139);
+    doc.text(sig.role, cx, y+25, {align:'center'});
+    if (sig.title) doc.text(sig.title, cx, y+30, {align:'center', maxWidth: sigW-4});
+  });
+  y += 36;
+
+  // ── RECEIPT ATTACHMENTS ──
+  const withImg = S.expenses.filter(e => e.preview);
+  if (withImg.length) {
+    doc.addPage(); y = MT;
+
+    doc.setFillColor(241,245,249);
+    doc.rect(0, 0, PW, 14, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(71,85,105);
+    doc.text('RECEIPT ATTACHMENTS', ML, 9);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(148,163,184);
+    doc.text(`${withImg.length} receipt(s) attached`, PW-MR, 9, {align:'right'});
+    doc.setDrawColor(226,232,240); doc.line(0, 14, PW, 14);
+    y = 20;
+
+    const imgW = (CW - 8) / 2;
+    const imgH = imgW * 1.35;
+    let col = 0;
+
+    for (let i = 0; i < withImg.length; i++) {
+      const e = withImg[i];
+      const x = ML + col * (imgW + 8);
+
+      if (y + imgH + 22 > PH - 15) { doc.addPage(); y = MT; col = 0; }
+
+      // Card border
+      doc.setDrawColor(226,232,240);
+      doc.setFillColor(255,255,255);
+      doc.roundedRect(x, y, imgW, imgH + 16, 2, 2, 'FD');
+
+      // Embed image
+      try {
+        const imgData = e.preview;
+        const ext = imgData.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+        doc.addImage(imgData, ext, x+1, y+1, imgW-2, imgH-2, undefined, 'MEDIUM');
+      } catch(ex) {
+        doc.setFillColor(241,245,249);
+        doc.rect(x+1, y+1, imgW-2, imgH-2, 'F');
+        doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(148,163,184);
+        doc.text('[Image]', x+imgW/2, y+imgH/2, {align:'center'});
+      }
+
+      // Label
+      doc.setFillColor(241,245,249);
+      doc.rect(x+1, y+imgH, imgW-2, 14, 'F');
+      doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(15,23,42);
+      doc.text(fmtDate(e.date) + ' · ₱' + fmt(e.amount), x+3, y+imgH+5.5, {maxWidth: imgW-6});
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(100,116,139);
+      doc.text(e.desc, x+3, y+imgH+11, {maxWidth: imgW-6});
+
+      col++;
+      if (col === 2) { col = 0; y += imgH + 20; }
+    }
+  }
+
+  return doc;
+}
+
+// ── SCREEN PREVIEW (UI only) ──
+function buildScreenPreview() {
+  const isL = S.type === 'liquidation';
+  const totE = S.expenses.reduce((s,e)=>s+e.amount,0);
+  const totF = S.funds.reduce((s,f)=>s+f.amount,0);
+  const bal  = totF - totE;
+
+  let h = `<div class="pdf-preview">
+  <div class="pdf-kgheader">
+    <div class="pdf-logo-box">KG</div>
+    <div class="pdf-firm-name"><h2>KG Consult Group Inc.</h2><p>Makati City, Philippines</p></div>
+  </div>
+  <div class="pdf-doc-type">${isL?'Liquidation Report':'Reimbursement Request'}</div>
+  <div class="pdf-meta">`;
+
+  if (isL) h += `<div class="pdf-meta-row"><span class="meta-label">Client</span><span class="meta-val">${S.clientName}</span></div>`;
+  h += `<div class="pdf-meta-row"><span class="meta-label">${isL?'Engagement':'Purpose'}</span><span class="meta-val">${S.engagement}</span></div>
+  <div class="pdf-meta-row"><span class="meta-label">Prepared by</span><span class="meta-val">${S.preparedBy||'N/A'}</span></div>
+  <div class="pdf-meta-row"><span class="meta-label">Date</span><span class="meta-val">${new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'})}</span></div>
+  </div>`;
+
+  if (isL && S.funds.length) {
+    h += `<div class="pdf-section-head">Actual Funds Received from Client</div>
+    <table class="pdf-table"><tr><th>Date</th><th>Description</th><th>Amount</th></tr>`;
+    S.funds.forEach(f => {
+      h += `<tr><td>${fmtDate(f.date)}</td><td>${f.desc}</td><td>₱${fmt(f.amount)}</td></tr>`;
+    });
+    h += `</table><div class="pdf-subtotal"><span>TOTAL FUNDS RECEIVED</span><span class="samt">₱${fmt(totF)}</span></div>`;
+  }
+
+  h += `<div class="pdf-section-head">Various Expenses</div>
+  <table class="pdf-table"><tr><th>Date</th><th>Description</th><th>Amount</th></tr>`;
+  S.expenses.forEach(e => {
+    h += `<tr><td>${fmtDate(e.date)}</td><td>${e.desc}</td><td>₱${fmt(e.amount)}</td></tr>`;
+  });
+  h += `</table><div class="pdf-subtotal"><span>TOTAL EXPENSES</span><span class="samt">₱${fmt(totE)}</span></div>`;
+
+  if (isL) {
+    const lbl = bal>=0?'TOTAL FUND FOR RETURN':'TOTAL AMOUNT FOR COLLECTION';
+    h += `<div class="pdf-balance-bar"><div class="blabel">${lbl}</div><div class="bamt ${bal<0?'neg':''}">₱${fmt(Math.abs(bal))}</div></div>`;
+  } else {
+    h += `<div class="pdf-balance-bar"><div class="blabel">TOTAL AMOUNT FOR REIMBURSEMENT</div><div class="bamt">₱${fmt(totE)}</div></div>`;
+  }
+
+  h += `<div class="pdf-sigs">
+  <div class="sig-block"><div class="sig-line"></div><div class="sig-name">${S.preparedBy||'_______________'}</div><div class="sig-title">Prepared By</div></div>
+  <div class="sig-block"><div class="sig-line"></div><div class="sig-name">DONNA R. GRACE</div><div class="sig-title">Reviewed By<br>Admin &amp; Finance Manager</div></div>
+  <div class="sig-block"><div class="sig-line"></div><div class="sig-name">KEVIN A. GRACE, CPA</div><div class="sig-title">Approved By<br>President &amp; Chief Consultant</div></div>
+  </div>`;
+
+  const imgs = S.expenses.filter(e=>e.preview);
+  if (imgs.length) {
+    h += `<div class="pdf-att-head">Receipt Attachments (${imgs.length})</div><div class="pdf-att-grid">`;
+    imgs.forEach(e => {
+      h += `<div class="att-card"><img src="${e.preview}" alt="receipt"><div class="att-label">${fmtDate(e.date)}<br>${e.desc}<br>₱${fmt(e.amount)}</div></div>`;
+    });
+    h += `</div>`;
+  }
+
+  h += `</div>`;
+  document.getElementById('preview-body').innerHTML = h;
+
+  const pb = document.getElementById('preview-badge');
+  pb.textContent = isL ? 'LIQUIDATION' : 'REIMBURSEMENT';
+  pb.className = `top-bar-badge ${isL?'badge-liquidation':'badge-reimbursement'}`;
+}
+
+// ── UTILS ──
+function fmtDate(str) {
+  if (!str) return '';
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('en-PH',{day:'2-digit',month:'short',year:'2-digit'});
+}
+
+function fmt(n) {
+  return Number(n).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// PWA manifest
+const mf = { name:'KG Expense', short_name:'KG Expense', start_url:'.', display:'standalone', background_color:'#1a2744', theme_color:'#1a2744', icons:[] };
+const mb = new Blob([JSON.stringify(mf)],{type:'application/json'});
+const ml = document.createElement('link');
+ml.rel='manifest'; ml.href=URL.createObjectURL(mb);
+document.head.appendChild(ml);
+</script>
+</body>
+</html>
